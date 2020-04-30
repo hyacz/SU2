@@ -896,8 +896,8 @@ void CIncNSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container,
     /*--- Adjustment for grid movement ---*/
 
     if (dynamic_grid) {
-      su2double *GridVel_i = geometry->node[iPoint]->GetGridVel();
-      su2double *GridVel_j = geometry->node[jPoint]->GetGridVel();
+      su2double *GridVel_i = geometry->nodes->GetGridVel(iPoint);
+      su2double *GridVel_j = geometry->nodes->GetGridVel(jPoint);
       ProjVel_i = 0.0; ProjVel_j =0.0;
       for (iDim = 0; iDim < nDim; iDim++) {
         ProjVel_i += GridVel_i[iDim]*Normal[iDim];
@@ -909,7 +909,7 @@ void CIncNSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container,
     /*--- Inviscid contribution ---*/
 
     Lambda = fabs(Mean_ProjVel) + Mean_SoundSpeed;
-    if (geometry->node[iPoint]->GetDomain()) nodes->AddMax_Lambda_Inv(iPoint,Lambda);
+    if (geometry->nodes->GetDomain(iPoint)) nodes->AddMax_Lambda_Inv(iPoint,Lambda);
     if (geometry->node[jPoint]->GetDomain()) nodes->AddMax_Lambda_Inv(jPoint,Lambda);
 
     /*--- Viscous contribution ---*/
@@ -925,7 +925,7 @@ void CIncNSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container,
     if (energy) Lambda_2 = (1.0/Mean_Cv)*Mean_Thermal_Conductivity;
     Lambda = (Lambda_1 + Lambda_2)*Area*Area/Mean_Density;
 
-    if (geometry->node[iPoint]->GetDomain()) nodes->AddMax_Lambda_Visc(iPoint,Lambda);
+    if (geometry->nodes->GetDomain(iPoint)) nodes->AddMax_Lambda_Visc(iPoint,Lambda);
     if (geometry->node[jPoint]->GetDomain()) nodes->AddMax_Lambda_Visc(jPoint,Lambda);
 
   }
@@ -953,7 +953,7 @@ void CIncNSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container,
       /*--- Adjustment for grid movement ---*/
 
       if (dynamic_grid) {
-        su2double *GridVel = geometry->node[iPoint]->GetGridVel();
+        su2double *GridVel = geometry->nodes->GetGridVel(iPoint);
         ProjVel = 0.0;
         for (iDim = 0; iDim < nDim; iDim++)
           ProjVel += GridVel[iDim]*Normal[iDim];
@@ -963,7 +963,7 @@ void CIncNSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container,
       /*--- Inviscid contribution ---*/
 
       Lambda = fabs(Mean_ProjVel) + Mean_SoundSpeed;
-      if (geometry->node[iPoint]->GetDomain()) {
+      if (geometry->nodes->GetDomain(iPoint)) {
         nodes->AddMax_Lambda_Inv(iPoint,Lambda);
       }
 
@@ -980,7 +980,7 @@ void CIncNSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container,
       if (energy) Lambda_2 = (1.0/Mean_Cv)*Mean_Thermal_Conductivity;
       Lambda = (Lambda_1 + Lambda_2)*Area*Area/Mean_Density;
 
-      if (geometry->node[iPoint]->GetDomain()) nodes->AddMax_Lambda_Visc(iPoint,Lambda);
+      if (geometry->nodes->GetDomain(iPoint)) nodes->AddMax_Lambda_Visc(iPoint,Lambda);
 
     }
     }
@@ -990,7 +990,7 @@ void CIncNSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_container,
 
   for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
 
-    Vol = geometry->node[iPoint]->GetVolume();
+    Vol = geometry->nodes->GetVolume(iPoint);
 
     if (Vol != 0.0) {
       Local_Delta_Time = nodes->GetLocalCFL(iPoint)*Vol / nodes->GetMax_Lambda_Inv(iPoint);
@@ -1099,7 +1099,7 @@ void CIncNSSolver::Viscous_Residual(CGeometry *geometry, CSolver **solver_contai
 
     iPoint = geometry->edges->GetNode(iEdge,0);
     jPoint = geometry->edges->GetNode(iEdge,1);
-    numerics->SetCoord(geometry->node[iPoint]->GetCoord(),
+    numerics->SetCoord(geometry->nodes->GetCoord(iPoint),
                        geometry->node[jPoint]->GetCoord());
     numerics->SetNormal(geometry->edges->GetNormal(iEdge));
 
@@ -1250,7 +1250,7 @@ void CIncNSSolver::Friction_Forces(CGeometry *geometry, CConfig *config) {
         iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
         iPointNormal = geometry->vertex[iMarker][iVertex]->GetNormal_Neighbor();
 
-        Coord = geometry->node[iPoint]->GetCoord();
+        Coord = geometry->nodes->GetCoord(iPoint);
         Coord_Normal = geometry->node[iPointNormal]->GetCoord();
 
         Normal = geometry->vertex[iMarker][iVertex]->GetNormal();
@@ -1325,11 +1325,11 @@ void CIncNSSolver::Friction_Forces(CGeometry *geometry, CConfig *config) {
         /*--- Note that y+, and heat are computed at the
          halo cells (for visualization purposes), but not the forces ---*/
 
-        if ((geometry->node[iPoint]->GetDomain()) && (Monitoring == YES)) {
+        if ((geometry->nodes->GetDomain(iPoint)) && (Monitoring == YES)) {
 
           /*--- Axisymmetric simulations ---*/
 
-          if (axisymmetric) AxiFactor = 2.0*PI_NUMBER*geometry->node[iPoint]->GetCoord(1);
+          if (axisymmetric) AxiFactor = 2.0*PI_NUMBER*geometry->nodes->GetCoord(iPoint,1);
           else AxiFactor = 1.0;
 
           /*--- Force computation ---*/
@@ -1631,7 +1631,7 @@ void CIncNSSolver::BC_HeatFlux_Wall(CGeometry *geometry, CSolver **solver_contai
 
     /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
 
-    if (geometry->node[iPoint]->GetDomain()) {
+    if (geometry->nodes->GetDomain(iPoint)) {
 
       /*--- Compute dual-grid area and boundary normal ---*/
 
@@ -1657,7 +1657,7 @@ void CIncNSSolver::BC_HeatFlux_Wall(CGeometry *geometry, CSolver **solver_contai
        be zero (v = 0), unless there are moving walls (v = u_wall)---*/
 
       if (dynamic_grid) {
-        GridVel = geometry->node[iPoint]->GetGridVel();
+        GridVel = geometry->nodes->GetGridVel(iPoint);
         for (iDim = 0; iDim < nDim; iDim++) Vector[iDim] = GridVel[iDim];
       } else {
         for (iDim = 0; iDim < nDim; iDim++) Vector[iDim] = 0.0;
@@ -1737,7 +1737,7 @@ void CIncNSSolver::BC_Isothermal_Wall(CGeometry *geometry, CSolver **solver_cont
 
     /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
 
-    if (geometry->node[iPoint]->GetDomain()) {
+    if (geometry->nodes->GetDomain(iPoint)) {
 
       /*--- Initialize the convective & viscous residuals to zero ---*/
 
@@ -1754,7 +1754,7 @@ void CIncNSSolver::BC_Isothermal_Wall(CGeometry *geometry, CSolver **solver_cont
        be zero (v = 0), unless there are moving walls (v = u_wall)---*/
 
       if (dynamic_grid) {
-        GridVel = geometry->node[iPoint]->GetGridVel();
+        GridVel = geometry->nodes->GetGridVel(iPoint);
         for (iDim = 0; iDim < nDim; iDim++) Vector[iDim] = GridVel[iDim];
       } else {
         for (iDim = 0; iDim < nDim; iDim++) Vector[iDim] = 0.0;
@@ -1787,7 +1787,7 @@ void CIncNSSolver::BC_Isothermal_Wall(CGeometry *geometry, CSolver **solver_cont
 
         /*--- Get coordinates of i & nearest normal and compute distance ---*/
 
-        Coord_i = geometry->node[iPoint]->GetCoord();
+        Coord_i = geometry->nodes->GetCoord(iPoint);
         Coord_j = geometry->node[Point_Normal]->GetCoord();
         dist_ij = 0;
         for (iDim = 0; iDim < nDim; iDim++)
@@ -1877,7 +1877,7 @@ void CIncNSSolver::BC_ConjugateHeat_Interface(CGeometry *geometry, CSolver **sol
 
     iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
 
-    if (geometry->node[iPoint]->GetDomain()) {
+    if (geometry->nodes->GetDomain(iPoint)) {
 
       /*--- Initialize the convective & viscous residuals to zero ---*/
 
@@ -1894,7 +1894,7 @@ void CIncNSSolver::BC_ConjugateHeat_Interface(CGeometry *geometry, CSolver **sol
        be zero (v = 0), unless there are moving walls (v = u_wall)---*/
 
       if (dynamic_grid) {
-        GridVel = geometry->node[iPoint]->GetGridVel();
+        GridVel = geometry->nodes->GetGridVel(iPoint);
         for (iDim = 0; iDim < nDim; iDim++) Vector[iDim] = GridVel[iDim];
       } else {
         for (iDim = 0; iDim < nDim; iDim++) Vector[iDim] = 0.0;
@@ -1923,7 +1923,7 @@ void CIncNSSolver::BC_ConjugateHeat_Interface(CGeometry *geometry, CSolver **sol
 
           /*--- Get coordinates of i & nearest normal and compute distance ---*/
 
-          Coord_i = geometry->node[iPoint]->GetCoord();
+          Coord_i = geometry->nodes->GetCoord(iPoint);
           Coord_j = geometry->node[Point_Normal]->GetCoord();
           dist_ij = 0;
           for (iDim = 0; iDim < nDim; iDim++)

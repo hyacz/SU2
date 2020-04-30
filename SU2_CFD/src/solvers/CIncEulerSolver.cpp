@@ -1399,7 +1399,7 @@ void CIncEulerSolver::SetInitialCondition(CGeometry **geometry, CSolver ***solve
       for (iPoint = 0; iPoint < geometry[iMesh]->GetnPoint(); iPoint++) {
 
         /* Set the pointers to the coordinates and solution of this DOF. */
-        const su2double *coor = geometry[iMesh]->node[iPoint]->GetCoord();
+        const su2double *coor = geometry[iMesh]->nodes->GetCoord(iPoint);
         su2double *solDOF     = solver_container[iMesh][FLOW_SOL]->GetNodes()->GetSolution(iPoint);
 
         /* Set the solution in this DOF to the initial condition provided by
@@ -1418,7 +1418,7 @@ void CIncEulerSolver::SetInitialCondition(CGeometry **geometry, CSolver ***solve
     Solution = new su2double[nVar];
     for (iMesh = 1; iMesh <= config->GetnMGLevels(); iMesh++) {
       for (iPoint = 0; iPoint < geometry[iMesh]->GetnPoint(); iPoint++) {
-        Area_Parent = geometry[iMesh]->node[iPoint]->GetVolume();
+        Area_Parent = geometry[iMesh]->nodes->GetVolume(iPoint);
         for (iVar = 0; iVar < nVar; iVar++) Solution[iVar] = 0.0;
         for (iChildren = 0; iChildren < geometry[iMesh]->node[iPoint]->GetnChildren_CV(); iChildren++) {
           Point_Fine = geometry[iMesh]->node[iPoint]->GetChildren_CV(iChildren);
@@ -1443,7 +1443,7 @@ void CIncEulerSolver::SetInitialCondition(CGeometry **geometry, CSolver ***solve
       Solution = new su2double[nVar_Turb];
       for (iMesh = 1; iMesh <= config->GetnMGLevels(); iMesh++) {
         for (iPoint = 0; iPoint < geometry[iMesh]->GetnPoint(); iPoint++) {
-          Area_Parent = geometry[iMesh]->node[iPoint]->GetVolume();
+          Area_Parent = geometry[iMesh]->nodes->GetVolume(iPoint);
           for (iVar = 0; iVar < nVar_Turb; iVar++) Solution[iVar] = 0.0;
           for (iChildren = 0; iChildren < geometry[iMesh]->node[iPoint]->GetnChildren_CV(); iChildren++) {
             Point_Fine = geometry[iMesh]->node[iPoint]->GetChildren_CV(iChildren);
@@ -1651,8 +1651,8 @@ void CIncEulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contain
     /*--- Adjustment for grid movement ---*/
 
     if (dynamic_grid) {
-      su2double *GridVel_i = geometry->node[iPoint]->GetGridVel();
-      su2double *GridVel_j = geometry->node[jPoint]->GetGridVel();
+      su2double *GridVel_i = geometry->nodes->GetGridVel(iPoint);
+      su2double *GridVel_j = geometry->nodes->GetGridVel(jPoint);
       ProjVel_i = 0.0; ProjVel_j = 0.0;
       for (iDim = 0; iDim < nDim; iDim++) {
         ProjVel_i += GridVel_i[iDim]*Normal[iDim];
@@ -1664,7 +1664,7 @@ void CIncEulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contain
     /*--- Inviscid contribution ---*/
 
     Lambda = fabs(Mean_ProjVel) + Mean_SoundSpeed;
-    if (geometry->node[iPoint]->GetDomain()) nodes->AddMax_Lambda_Inv(iPoint,Lambda);
+    if (geometry->nodes->GetDomain(iPoint)) nodes->AddMax_Lambda_Inv(iPoint,Lambda);
     if (geometry->node[jPoint]->GetDomain()) nodes->AddMax_Lambda_Inv(jPoint,Lambda);
 
   }
@@ -1694,7 +1694,7 @@ void CIncEulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contain
       /*--- Adjustment for grid movement ---*/
 
       if (dynamic_grid) {
-        su2double *GridVel = geometry->node[iPoint]->GetGridVel();
+        su2double *GridVel = geometry->nodes->GetGridVel(iPoint);
         ProjVel = 0.0;
         for (iDim = 0; iDim < nDim; iDim++)
           ProjVel += GridVel[iDim]*Normal[iDim];
@@ -1704,7 +1704,7 @@ void CIncEulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contain
       /*--- Inviscid contribution ---*/
 
       Lambda = fabs(Mean_ProjVel) + Mean_SoundSpeed;
-      if (geometry->node[iPoint]->GetDomain()) {
+      if (geometry->nodes->GetDomain(iPoint)) {
         nodes->AddMax_Lambda_Inv(iPoint,Lambda);
       }
 
@@ -1717,7 +1717,7 @@ void CIncEulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contain
 
   for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
 
-    Vol = geometry->node[iPoint]->GetVolume();
+    Vol = geometry->nodes->GetVolume(iPoint);
 
     if (Vol != 0.0) {
       Local_Delta_Time  = nodes->GetLocalCFL(iPoint)*Vol / nodes->GetMax_Lambda_Inv(iPoint);
@@ -1829,7 +1829,7 @@ void CIncEulerSolver::Centered_Residual(CGeometry *geometry, CSolver **solver_co
 
     iPoint = geometry->edges->GetNode(iEdge,0); jPoint = geometry->edges->GetNode(iEdge,1);
     numerics->SetNormal(geometry->edges->GetNormal(iEdge));
-    numerics->SetNeighbor(geometry->node[iPoint]->GetnNeighbor(), geometry->node[jPoint]->GetnNeighbor());
+    numerics->SetNeighbor(geometry->nodes->GetnNeighbor(iPoint), geometry->node[jPoint]->GetnNeighbor());
 
     /*--- Set primitive variables w/o reconstruction ---*/
 
@@ -1849,7 +1849,7 @@ void CIncEulerSolver::Centered_Residual(CGeometry *geometry, CSolver **solver_co
     /*--- Grid movement ---*/
 
     if (dynamic_grid) {
-      numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(), geometry->node[jPoint]->GetGridVel());
+      numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(jPoint));
     }
 
     /*--- Compute residuals, and Jacobians ---*/
@@ -1899,7 +1899,7 @@ void CIncEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_cont
     /*--- Grid movement ---*/
 
     if (dynamic_grid)
-      numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(), geometry->node[jPoint]->GetGridVel());
+      numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(jPoint));
 
     /*--- Get primitive variables ---*/
 
@@ -1911,8 +1911,8 @@ void CIncEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_cont
     if (muscl) {
 
       for (iDim = 0; iDim < nDim; iDim++) {
-        Vector_i[iDim] = 0.5*(geometry->node[jPoint]->GetCoord(iDim) - geometry->node[iPoint]->GetCoord(iDim));
-        Vector_j[iDim] = 0.5*(geometry->node[iPoint]->GetCoord(iDim) - geometry->node[jPoint]->GetCoord(iDim));
+        Vector_i[iDim] = 0.5*(geometry->nodes->GetCoord(jPoint,iDim) - geometry->nodes->GetCoord(iPoint,iDim));
+        Vector_j[iDim] = 0.5*(geometry->nodes->GetCoord(iPoint,iDim) - geometry->nodes->GetCoord(jPoint,iDim));
       }
 
       Gradient_i = nodes->GetGradient_Reconstruction(iPoint);
@@ -2062,7 +2062,7 @@ void CIncEulerSolver::Source_Residual(CGeometry *geometry, CSolver **solver_cont
 
       /*--- Load the volume of the dual mesh cell ---*/
 
-      numerics->SetVolume(geometry->node[iPoint]->GetVolume());
+      numerics->SetVolume(geometry->nodes->GetVolume(iPoint));
 
       /*--- Compute the rotating frame source residual ---*/
 
@@ -2093,7 +2093,7 @@ void CIncEulerSolver::Source_Residual(CGeometry *geometry, CSolver **solver_cont
 
       /*--- Load the volume of the dual mesh cell ---*/
 
-      numerics->SetVolume(geometry->node[iPoint]->GetVolume());
+      numerics->SetVolume(geometry->nodes->GetVolume(iPoint));
 
       /*--- Compute the rotating frame source residual ---*/
 
@@ -2122,7 +2122,7 @@ void CIncEulerSolver::Source_Residual(CGeometry *geometry, CSolver **solver_cont
 
       /*--- Load the volume of the dual mesh cell ---*/
 
-      numerics->SetVolume(geometry->node[iPoint]->GetVolume());
+      numerics->SetVolume(geometry->nodes->GetVolume(iPoint));
 
       /*--- Compute the rotating frame source residual ---*/
 
@@ -2147,7 +2147,7 @@ void CIncEulerSolver::Source_Residual(CGeometry *geometry, CSolver **solver_cont
 
       for (iPoint = 0; iPoint < nPoint; iPoint++) {
 
-        su2double yCoord          = geometry->node[iPoint]->GetCoord(1);
+        su2double yCoord          = geometry->nodes->GetCoord(iPoint,1);
         su2double yVelocity       = nodes->GetVelocity(iPoint,1);
         su2double Total_Viscosity = (nodes->GetLaminarViscosity(iPoint) +
                                      nodes->GetEddyViscosity(iPoint));
@@ -2187,12 +2187,12 @@ void CIncEulerSolver::Source_Residual(CGeometry *geometry, CSolver **solver_cont
 
       /*--- Set control volume ---*/
 
-      numerics->SetVolume(geometry->node[iPoint]->GetVolume());
+      numerics->SetVolume(geometry->nodes->GetVolume(iPoint));
 
       /*--- Set y coordinate ---*/
 
-      numerics->SetCoord(geometry->node[iPoint]->GetCoord(),
-                         geometry->node[iPoint]->GetCoord());
+      numerics->SetCoord(geometry->nodes->GetCoord(iPoint),
+                         geometry->nodes->GetCoord(iPoint));
 
       /*--- If viscous, we need gradients for extra terms. ---*/
 
@@ -2236,7 +2236,7 @@ void CIncEulerSolver::Source_Residual(CGeometry *geometry, CSolver **solver_cont
 
       /*--- Set control volume ---*/
 
-      second_numerics->SetVolume(geometry->node[iPoint]->GetVolume());
+      second_numerics->SetVolume(geometry->nodes->GetVolume(iPoint));
 
       /*--- Compute the residual ---*/
 
@@ -2254,7 +2254,7 @@ void CIncEulerSolver::Source_Residual(CGeometry *geometry, CSolver **solver_cont
 
         if(solver_container[RAD_SOL]->GetNodes()->GetVol_HeatSource(iPoint)) {
 
-          auto Volume = geometry->node[iPoint]->GetVolume();
+          auto Volume = geometry->nodes->GetVolume(iPoint);
 
           /*--- Subtract integrated source from the residual. ---*/
           LinSysRes(iPoint, nDim+1) -= config->GetHeatSource_Val()*Volume;
@@ -2279,10 +2279,10 @@ void CIncEulerSolver::Source_Residual(CGeometry *geometry, CSolver **solver_cont
       for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
 
         /*--- Get control volume size. ---*/
-        su2double Volume = geometry->node[iPoint]->GetVolume();
+        su2double Volume = geometry->nodes->GetVolume(iPoint);
 
         /*--- Get the current point coordinates. ---*/
-        const su2double *coor = geometry->node[iPoint]->GetCoord();
+        const su2double *coor = geometry->nodes->GetCoord(iPoint);
 
         /*--- Get the MMS source term. ---*/
         vector<su2double> sourceMan(nVar,0.0);
@@ -2351,8 +2351,8 @@ void CIncEulerSolver::SetMax_Eigenvalue(CGeometry *geometry, CConfig *config) {
     /*--- Adjustment for grid movement ---*/
 
     if (dynamic_grid) {
-      GridVel_i = geometry->node[iPoint]->GetGridVel();
-      GridVel_j = geometry->node[jPoint]->GetGridVel();
+      GridVel_i = geometry->nodes->GetGridVel(iPoint);
+      GridVel_j = geometry->nodes->GetGridVel(jPoint);
       ProjVel_i = 0.0; ProjVel_j =0.0;
       for (iDim = 0; iDim < nDim; iDim++) {
         ProjVel_i += GridVel_i[iDim]*Normal[iDim];
@@ -2364,7 +2364,7 @@ void CIncEulerSolver::SetMax_Eigenvalue(CGeometry *geometry, CConfig *config) {
     /*--- Inviscid contribution ---*/
 
     Lambda = fabs(Mean_ProjVel) + Mean_SoundSpeed;
-    if (geometry->node[iPoint]->GetDomain()) nodes->AddLambda(iPoint,Lambda);
+    if (geometry->nodes->GetDomain(iPoint)) nodes->AddLambda(iPoint,Lambda);
     if (geometry->node[jPoint]->GetDomain()) nodes->AddLambda(jPoint,Lambda);
 
   }
@@ -2393,7 +2393,7 @@ void CIncEulerSolver::SetMax_Eigenvalue(CGeometry *geometry, CConfig *config) {
       /*--- Adjustment for grid movement ---*/
 
       if (dynamic_grid) {
-        GridVel = geometry->node[iPoint]->GetGridVel();
+        GridVel = geometry->nodes->GetGridVel(iPoint);
         ProjVel = 0.0;
         for (iDim = 0; iDim < nDim; iDim++)
           ProjVel += GridVel[iDim]*Normal[iDim];
@@ -2403,7 +2403,7 @@ void CIncEulerSolver::SetMax_Eigenvalue(CGeometry *geometry, CConfig *config) {
       /*--- Inviscid contribution ---*/
 
       Lambda = fabs(Mean_ProjVel) + Mean_SoundSpeed;
-      if (geometry->node[iPoint]->GetDomain()) {
+      if (geometry->nodes->GetDomain(iPoint)) {
         nodes->AddLambda(iPoint,Lambda);
       }
 
@@ -2452,14 +2452,14 @@ void CIncEulerSolver::SetUndivided_Laplacian(CGeometry *geometry, CConfig *confi
     /*--- Both points inside the domain, or both in the boundary ---*/
 
     if ((!boundary_i && !boundary_j) || (boundary_i && boundary_j)) {
-      if (geometry->node[iPoint]->GetDomain()) nodes->SubtractUnd_Lapl(iPoint,Diff);
+      if (geometry->nodes->GetDomain(iPoint)) nodes->SubtractUnd_Lapl(iPoint,Diff);
       if (geometry->node[jPoint]->GetDomain()) nodes->AddUnd_Lapl(jPoint,Diff);
     }
 
     /*--- iPoint inside the domain, jPoint on the boundary ---*/
 
     if (!boundary_i && boundary_j)
-      if (geometry->node[iPoint]->GetDomain()) nodes->SubtractUnd_Lapl(iPoint,Diff);
+      if (geometry->nodes->GetDomain(iPoint)) nodes->SubtractUnd_Lapl(iPoint,Diff);
 
     /*--- jPoint inside the domain, iPoint on the boundary ---*/
 
@@ -2516,7 +2516,7 @@ void CIncEulerSolver::SetCentered_Dissipation_Sensor(CGeometry *geometry, CConfi
 
     if ((!boundary_i && !boundary_j) || (boundary_i && boundary_j)) {
 
-      if (geometry->node[iPoint]->GetDomain()) {
+      if (geometry->nodes->GetDomain(iPoint)) {
         iPoint_UndLapl[iPoint] += (Pressure_j - Pressure_i);
         jPoint_UndLapl[iPoint] += (Pressure_i + Pressure_j);
       }
@@ -2531,7 +2531,7 @@ void CIncEulerSolver::SetCentered_Dissipation_Sensor(CGeometry *geometry, CConfi
     /*--- iPoint inside the domain, jPoint on the boundary ---*/
 
     if (!boundary_i && boundary_j)
-      if (geometry->node[iPoint]->GetDomain()) {
+      if (geometry->nodes->GetDomain(iPoint)) {
         iPoint_UndLapl[iPoint] += (Pressure_j - Pressure_i);
         jPoint_UndLapl[iPoint] += (Pressure_i + Pressure_j);
       }
@@ -2702,10 +2702,10 @@ void CIncEulerSolver::Pressure_Forces(CGeometry *geometry, CConfig *config) {
         /*--- Note that the pressure coefficient is computed at the
          halo cells (for visualization purposes), but not the forces ---*/
 
-        if ( (geometry->node[iPoint]->GetDomain()) && (Monitoring == YES) ) {
+        if ( (geometry->nodes->GetDomain(iPoint)) && (Monitoring == YES) ) {
 
           Normal = geometry->vertex[iMarker][iVertex]->GetNormal();
-          Coord = geometry->node[iPoint]->GetCoord();
+          Coord = geometry->nodes->GetCoord(iPoint);
 
           for (iDim = 0; iDim < nDim; iDim++) {
             MomentDist[iDim] = Coord[iDim] - Origin[iDim];
@@ -2713,7 +2713,7 @@ void CIncEulerSolver::Pressure_Forces(CGeometry *geometry, CConfig *config) {
 
           /*--- Axisymmetric simulations ---*/
 
-          if (axisymmetric) AxiFactor = 2.0*PI_NUMBER*geometry->node[iPoint]->GetCoord(1);
+          if (axisymmetric) AxiFactor = 2.0*PI_NUMBER*geometry->nodes->GetCoord(iPoint,1);
           else AxiFactor = 1.0;
 
           /*--- Force computation, note the minus sign due to the
@@ -3073,10 +3073,10 @@ void CIncEulerSolver::Momentum_Forces(CGeometry *geometry, CConfig *config) {
         /*--- Note that the pressure coefficient is computed at the
          halo cells (for visualization purposes), but not the forces ---*/
 
-        if ( (geometry->node[iPoint]->GetDomain()) && (Monitoring == YES) ) {
+        if ( (geometry->nodes->GetDomain(iPoint)) && (Monitoring == YES) ) {
 
           Normal = geometry->vertex[iMarker][iVertex]->GetNormal();
-          Coord = geometry->node[iPoint]->GetCoord();
+          Coord = geometry->nodes->GetCoord(iPoint);
           Density   = nodes->GetDensity(iPoint);
 
           Area = 0.0;
@@ -3093,7 +3093,7 @@ void CIncEulerSolver::Momentum_Forces(CGeometry *geometry, CConfig *config) {
 
           /*--- Axisymmetric simulations ---*/
 
-          if (axisymmetric) AxiFactor = 2.0*PI_NUMBER*geometry->node[iPoint]->GetCoord(1);
+          if (axisymmetric) AxiFactor = 2.0*PI_NUMBER*geometry->nodes->GetCoord(iPoint,1);
           else AxiFactor = 1.0;
 
           /*--- Force computation, note the minus sign due to the
@@ -3352,7 +3352,7 @@ void CIncEulerSolver::ExplicitRK_Iteration(CGeometry *geometry, CSolver **solver
   /*--- Update the solution ---*/
 
   for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
-    Vol = (geometry->node[iPoint]->GetVolume() +
+    Vol = (geometry->nodes->GetVolume(iPoint) +
            geometry->node[iPoint]->GetPeriodicVolume());
     Delta = nodes->GetDelta_Time(iPoint) / Vol;
 
@@ -3367,7 +3367,7 @@ void CIncEulerSolver::ExplicitRK_Iteration(CGeometry *geometry, CSolver **solver
           Res += Preconditioner[iVar][jVar]*(Residual[jVar] + Res_TruncError[jVar]);
         nodes->AddSolution(iPoint,iVar, -Res*Delta*RK_AlphaCoeff);
         AddRes_RMS(iVar, Res*Res);
-        AddRes_Max(iVar, fabs(Res), geometry->node[iPoint]->GetGlobalIndex(), geometry->node[iPoint]->GetCoord());
+        AddRes_Max(iVar, fabs(Res), geometry->nodes->GetGlobalIndex(iPoint), geometry->nodes->GetCoord(iPoint));
       }
     }
   }
@@ -3403,7 +3403,7 @@ void CIncEulerSolver::ExplicitEuler_Iteration(CGeometry *geometry, CSolver **sol
   /*--- Update the solution ---*/
 
   for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
-    Vol = (geometry->node[iPoint]->GetVolume() +
+    Vol = (geometry->nodes->GetVolume(iPoint) +
            geometry->node[iPoint]->GetPeriodicVolume());
     Delta = nodes->GetDelta_Time(iPoint) / Vol;
 
@@ -3419,7 +3419,7 @@ void CIncEulerSolver::ExplicitEuler_Iteration(CGeometry *geometry, CSolver **sol
           Res += Preconditioner[iVar][jVar]*(local_Residual[jVar] + local_Res_TruncError[jVar]);
         nodes->AddSolution(iPoint,iVar, -Res*Delta);
         AddRes_RMS(iVar, Res*Res);
-        AddRes_Max(iVar, fabs(Res), geometry->node[iPoint]->GetGlobalIndex(), geometry->node[iPoint]->GetCoord());
+        AddRes_Max(iVar, fabs(Res), geometry->nodes->GetGlobalIndex(iPoint), geometry->nodes->GetCoord(iPoint));
       }
     }
   }
@@ -3464,7 +3464,7 @@ void CIncEulerSolver::ImplicitEuler_Iteration(CGeometry *geometry, CSolver **sol
 
     /*--- Read the volume ---*/
 
-    Vol = (geometry->node[iPoint]->GetVolume() +
+    Vol = (geometry->nodes->GetVolume(iPoint) +
            geometry->node[iPoint]->GetPeriodicVolume());
 
     /*--- Apply the preconditioner and add to the diagonal. ---*/
@@ -3494,7 +3494,7 @@ void CIncEulerSolver::ImplicitEuler_Iteration(CGeometry *geometry, CSolver **sol
       LinSysRes[total_index] = - (LinSysRes[total_index] + local_Res_TruncError[iVar]);
       LinSysSol[total_index] = 0.0;
       AddRes_RMS(iVar, LinSysRes[total_index]*LinSysRes[total_index]);
-      AddRes_Max(iVar, fabs(LinSysRes[total_index]), geometry->node[iPoint]->GetGlobalIndex(), geometry->node[iPoint]->GetCoord());
+      AddRes_Max(iVar, fabs(LinSysRes[total_index]), geometry->nodes->GetGlobalIndex(iPoint), geometry->nodes->GetCoord(iPoint));
     }
 
   }
@@ -4059,7 +4059,7 @@ void CIncEulerSolver::BC_Far_Field(CGeometry *geometry, CSolver **solver_contain
 
     /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
 
-    if (geometry->node[iPoint]->GetDomain()) {
+    if (geometry->nodes->GetDomain(iPoint)) {
 
       /*--- Index of the closest interior node ---*/
 
@@ -4105,8 +4105,8 @@ void CIncEulerSolver::BC_Far_Field(CGeometry *geometry, CSolver **solver_contain
       conv_numerics->SetPrimitive(V_domain, V_infty);
 
       if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(),
-                                  geometry->node[iPoint]->GetGridVel());
+        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
+                                  geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the convective residual using an upwind scheme ---*/
 
@@ -4134,7 +4134,7 @@ void CIncEulerSolver::BC_Far_Field(CGeometry *geometry, CSolver **solver_contain
         /*--- Set the normal vector and the coordinates ---*/
 
         visc_numerics->SetNormal(Normal);
-        visc_numerics->SetCoord(geometry->node[iPoint]->GetCoord(),
+        visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint),
                                 geometry->node[Point_Normal]->GetCoord());
 
         /*--- Primitive variables, and gradient ---*/
@@ -4202,7 +4202,7 @@ void CIncEulerSolver::BC_Inlet(CGeometry *geometry, CSolver **solver_container,
 
     /*--- Check if the node belongs to the domain (i.e., not a halo node) ---*/
 
-    if (geometry->node[iPoint]->GetDomain()) {
+    if (geometry->nodes->GetDomain(iPoint)) {
 
       /*--- Index of the closest interior node ---*/
 
@@ -4357,8 +4357,8 @@ void CIncEulerSolver::BC_Inlet(CGeometry *geometry, CSolver **solver_container,
       conv_numerics->SetPrimitive(V_domain, V_inlet);
 
       if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(),
-                                  geometry->node[iPoint]->GetGridVel());
+        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
+                                  geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -4386,7 +4386,7 @@ void CIncEulerSolver::BC_Inlet(CGeometry *geometry, CSolver **solver_container,
         /*--- Set the normal vector and the coordinates ---*/
 
         visc_numerics->SetNormal(Normal);
-        visc_numerics->SetCoord(geometry->node[iPoint]->GetCoord(),
+        visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint),
                                 geometry->node[Point_Normal]->GetCoord());
 
         /*--- Primitive variables, and gradient ---*/
@@ -4452,7 +4452,7 @@ void CIncEulerSolver::BC_Outlet(CGeometry *geometry, CSolver **solver_container,
 
     /*--- Check if the node belongs to the domain (i.e., not a halo node) ---*/
 
-    if (geometry->node[iPoint]->GetDomain()) {
+    if (geometry->nodes->GetDomain(iPoint)) {
 
       /*--- Index of the closest interior node ---*/
 
@@ -4565,8 +4565,8 @@ void CIncEulerSolver::BC_Outlet(CGeometry *geometry, CSolver **solver_container,
       conv_numerics->SetPrimitive(V_domain, V_outlet);
 
       if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(),
-                                  geometry->node[iPoint]->GetGridVel());
+        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
+                                  geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -4595,7 +4595,7 @@ void CIncEulerSolver::BC_Outlet(CGeometry *geometry, CSolver **solver_container,
         /*--- Set the normal vector and the coordinates ---*/
 
         visc_numerics->SetNormal(Normal);
-        visc_numerics->SetCoord(geometry->node[iPoint]->GetCoord(),
+        visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint),
                                 geometry->node[Point_Normal]->GetCoord());
 
         /*--- Primitive variables, and gradient ---*/
@@ -4745,7 +4745,7 @@ void CIncEulerSolver::BC_Sym_Plane(CGeometry      *geometry,
     iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
 
     /*--- Check if the node belongs to the domain (i.e., not a halo node) ---*/
-    if (geometry->node[iPoint]->GetDomain()) {
+    if (geometry->nodes->GetDomain(iPoint)) {
 
       /*-------------------------------------------------------------------------------*/
       /*--- Step 1: For the convective fluxes, create a reflected state of the      ---*/
@@ -4759,7 +4759,7 @@ void CIncEulerSolver::BC_Sym_Plane(CGeometry      *geometry,
 
       /*--- Grid movement ---*/
       if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(), geometry->node[iPoint]->GetGridVel());
+        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(iPoint));
 
       /*--- Normal vector for this vertex (negate for outward convention). ---*/
       geometry->vertex[val_marker][iVertex]->GetNormal(Normal);
@@ -4810,8 +4810,8 @@ void CIncEulerSolver::BC_Sym_Plane(CGeometry      *geometry,
         /*-------------------------------------------------------------------------------*/
 
         /*--- Set the normal vector and the coordinates. ---*/
-        visc_numerics->SetCoord(geometry->node[iPoint]->GetCoord(),
-                                geometry->node[iPoint]->GetCoord());
+        visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint),
+                                geometry->nodes->GetCoord(iPoint));
         visc_numerics->SetNormal(Normal);
 
         /*--- Set the primitive and Secondary variables. ---*/
@@ -4938,7 +4938,7 @@ void CIncEulerSolver::BC_Fluid_Interface(CGeometry *geometry, CSolver **solver_c
       for (iVertex = 0; iVertex < geometry->nVertex[iMarker]; iVertex++) {
         iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
 
-        if (geometry->node[iPoint]->GetDomain()) {
+        if (geometry->nodes->GetDomain(iPoint)) {
 
           nDonorVertex = GetnSlidingStates(iMarker, iVertex);
 
@@ -4978,7 +4978,7 @@ void CIncEulerSolver::BC_Fluid_Interface(CGeometry *geometry, CSolver **solver_c
             conv_numerics->SetNormal(Normal);
 
             if (dynamic_grid)
-              conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(), geometry->node[iPoint]->GetGridVel());
+              conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(iPoint));
 
             /*--- Compute the convective residual using an upwind scheme ---*/
 
@@ -5023,7 +5023,7 @@ void CIncEulerSolver::BC_Fluid_Interface(CGeometry *geometry, CSolver **solver_c
               /*--- Set the normal vector and the coordinates ---*/
 
               visc_numerics->SetNormal(Normal);
-              visc_numerics->SetCoord(geometry->node[iPoint]->GetCoord(), geometry->node[Point_Normal]->GetCoord());
+              visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), geometry->node[Point_Normal]->GetCoord());
 
               /*--- Primitive variables, and gradient ---*/
 
@@ -5121,11 +5121,11 @@ void CIncEulerSolver::BC_Custom(CGeometry      *geometry,
 
       /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
 
-      if (geometry->node[iPoint]->GetDomain()) {
+      if (geometry->nodes->GetDomain(iPoint)) {
 
         /*--- Get the coordinates for the current node. ---*/
 
-        const su2double *coor = geometry->node[iPoint]->GetCoord();
+        const su2double *coor = geometry->nodes->GetCoord(iPoint);
 
         /*--- Get the conservative state from the verification solution. ---*/
 
@@ -5234,7 +5234,7 @@ void CIncEulerSolver::SetResidual_DualTime(CGeometry *geometry, CSolver **solver
       /*--- CV volume at time n+1. As we are on a static mesh, the volume
        of the CV will remained fixed for all time steps. ---*/
 
-      Volume_nP1 = geometry->node[iPoint]->GetVolume();
+      Volume_nP1 = geometry->nodes->GetVolume(iPoint);
 
       /*--- Compute the dual time-stepping source term based on the chosen
        time discretization scheme (1st- or 2nd-order). Note that for an
@@ -5312,8 +5312,8 @@ void CIncEulerSolver::SetResidual_DualTime(CGeometry *geometry, CSolver **solver
 
       /*--- Grid velocities stored at nodes i & j ---*/
 
-      GridVel_i = geometry->node[iPoint]->GetGridVel();
-      GridVel_j = geometry->node[jPoint]->GetGridVel();
+      GridVel_i = geometry->nodes->GetGridVel(iPoint);
+      GridVel_j = geometry->nodes->GetGridVel(jPoint);
 
       /*--- Compute the GCL term by averaging the grid velocities at the
        edge mid-point and dotting with the face normal. ---*/
@@ -5381,7 +5381,7 @@ void CIncEulerSolver::SetResidual_DualTime(CGeometry *geometry, CSolver **solver
 
         /*--- Grid velocities stored at boundary node i ---*/
 
-        GridVel_i = geometry->node[iPoint]->GetGridVel();
+        GridVel_i = geometry->nodes->GetGridVel(iPoint);
 
         /*--- Compute the GCL term by dotting the grid velocity with the face
          normal. The normal is negated to match the boundary convention. ---*/
@@ -5464,7 +5464,7 @@ void CIncEulerSolver::SetResidual_DualTime(CGeometry *geometry, CSolver **solver
        volumes will remain constant. ---*/
 
       Volume_nM1 = geometry->node[iPoint]->GetVolume_nM1();
-      Volume_nP1 = geometry->node[iPoint]->GetVolume();
+      Volume_nP1 = geometry->nodes->GetVolume(iPoint);
 
       /*--- Compute the dual time-stepping source residual. Due to the
        introduction of the GCL term above, the remainder of the source residual
@@ -5565,15 +5565,15 @@ void CIncEulerSolver::GetOutlet_Properties(CGeometry *geometry, CConfig *config,
 
           iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
 
-          if (geometry->node[iPoint]->GetDomain()) {
+          if (geometry->nodes->GetDomain(iPoint)) {
 
             V_outlet = nodes->GetPrimitive(iPoint);
 
             geometry->vertex[iMarker][iVertex]->GetNormal(Vector);
 
             if (axisymmetric) {
-              if (geometry->node[iPoint]->GetCoord(1) != 0.0)
-                AxiFactor = 2.0*PI_NUMBER*geometry->node[iPoint]->GetCoord(1);
+              if (geometry->nodes->GetCoord(iPoint,1) != 0.0)
+                AxiFactor = 2.0*PI_NUMBER*geometry->nodes->GetCoord(iPoint,1);
               else
                 AxiFactor = 1.0;
             } else {
@@ -5762,7 +5762,7 @@ void CIncEulerSolver::ComputeVerificationError(CGeometry *geometry,
       for (unsigned long iPoint = 0; iPoint < nPointDomain; iPoint++) {
 
         /* Set the pointers to the coordinates and solution of this DOF. */
-        const su2double *coor = geometry->node[iPoint]->GetCoord();
+        const su2double *coor = geometry->nodes->GetCoord(iPoint);
         su2double *solDOF     = nodes->GetSolution(iPoint);
 
         /* Get local error from the verification solution class. */
@@ -5773,8 +5773,8 @@ void CIncEulerSolver::ComputeVerificationError(CGeometry *geometry,
         for (unsigned short iVar = 0; iVar < nVar; iVar++) {
           VerificationSolution->AddError_RMS(iVar, error[iVar]*error[iVar]);
           VerificationSolution->AddError_Max(iVar, fabs(error[iVar]),
-                                             geometry->node[iPoint]->GetGlobalIndex(),
-                                             geometry->node[iPoint]->GetCoord());
+                                             geometry->nodes->GetGlobalIndex(iPoint),
+                                             geometry->nodes->GetCoord(iPoint));
         }
       }
 
@@ -6005,7 +6005,7 @@ void CIncEulerSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConf
 
   for (iMesh = 1; iMesh <= config->GetnMGLevels(); iMesh++) {
     for (iPoint = 0; iPoint < geometry[iMesh]->GetnPoint(); iPoint++) {
-      Area_Parent = geometry[iMesh]->node[iPoint]->GetVolume();
+      Area_Parent = geometry[iMesh]->nodes->GetVolume(iPoint);
       for (iVar = 0; iVar < nVar; iVar++) Solution[iVar] = 0.0;
       for (iChildren = 0; iChildren < geometry[iMesh]->node[iPoint]->GetnChildren_CV(); iChildren++) {
         Point_Fine = geometry[iMesh]->node[iPoint]->GetChildren_CV(iChildren);

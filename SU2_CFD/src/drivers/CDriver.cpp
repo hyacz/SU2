@@ -922,8 +922,8 @@ void CDriver::Geometrical_Preprocessing_FVM(CConfig *config, CGeometry **&geomet
         geometry[iMGlevel]->node[iPoint]->SetVolume_nM1();
 
         /*--- Update point coordinates ---*/
-        geometry[iMGlevel]->node[iPoint]->SetCoord_n();
-        geometry[iMGlevel]->node[iPoint]->SetCoord_n1();
+        geometry[iMGlevel]->nodes->SetCoord_n(iPoint, );
+        geometry[iMGlevel]->nodes->SetCoord_n1(iPoint, );
 
       }
     }

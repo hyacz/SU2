@@ -503,7 +503,7 @@ void CFEASolver::Set_Prestretch(CGeometry *geometry, CConfig *config) {
   /*--- Now fill array with the transform values only for local points ---*/
 
   for (iPoint = 0; iPoint < nPointDomain; iPoint++)
-    Global2Local[geometry->node[iPoint]->GetGlobalIndex()] = iPoint;
+    Global2Local[geometry->nodes->GetGlobalIndex(iPoint)] = iPoint;
 
   /*--- Read all lines in the restart file ---*/
 
@@ -654,7 +654,7 @@ void CFEASolver::Set_ReferenceGeometry(CGeometry *geometry, CConfig *config) {
   /*--- Now fill array with the transform values only for local points ---*/
 
   for (iPoint = 0; iPoint < nPointDomain; iPoint++)
-    Global2Local[geometry->node[iPoint]->GetGlobalIndex()] = iPoint;
+    Global2Local[geometry->nodes->GetGlobalIndex(iPoint)] = iPoint;
 
   /*--- Read all lines in the restart file ---*/
 
@@ -722,7 +722,7 @@ void CFEASolver::Set_VertexEliminationSchedule(CGeometry *geometry, const vector
   for (auto iMarker : markers) {
     for (auto iVertex = 0ul; iVertex < geometry->nVertex[iMarker]; iVertex++) {
       auto iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
-      myPoints.push_back(geometry->node[iPoint]->GetGlobalIndex());
+      myPoints.push_back(geometry->nodes->GetGlobalIndex(iPoint));
     }
   }
 
@@ -735,7 +735,7 @@ void CFEASolver::Set_VertexEliminationSchedule(CGeometry *geometry, const vector
   /*--- Global to local map for the halo points of the rank (not covered by the CGeometry map). ---*/
   unordered_map<unsigned long, unsigned long> Global2Local;
   for (auto iPoint = nPointDomain; iPoint < nPoint; ++iPoint) {
-    Global2Local[geometry->node[iPoint]->GetGlobalIndex()] = iPoint;
+    Global2Local[geometry->nodes->GetGlobalIndex(iPoint)] = iPoint;
   }
 
   /*--- Populate elimination list. ---*/
@@ -1523,7 +1523,7 @@ void CFEASolver::Compute_NodalStress(CGeometry *geometry, CNumerics **numerics, 
 
               for (iDim = 0; iDim < nDim; iDim++) {
                 /*--- Retrieve coordinate ---*/
-                val_Coord = geometry->node[iPoint]->GetCoord(iDim);
+                val_Coord = geometry->nodes->GetCoord(iPoint,iDim);
                 myfile << "X" << iDim + 1 << ": " << val_Coord << " \t " ;
               }
 
@@ -1581,7 +1581,7 @@ void CFEASolver::Compute_NodalStress(CGeometry *geometry, CNumerics **numerics, 
 
                   for (iDim = 0; iDim < nDim; iDim++) {
                     /*--- Retrieve coordinate ---*/
-                    val_Coord = geometry->node[iPoint]->GetCoord(iDim);
+                    val_Coord = geometry->nodes->GetCoord(iPoint,iDim);
                     myfile << "X" << iDim + 1 << ": " << val_Coord << " \t " ;
                   }
 
@@ -1809,7 +1809,7 @@ void CFEASolver::BC_Sym_Plane(CGeometry *geometry, CNumerics *numerics, const CC
 
   for (auto iNode = 0u; iNode < nNodes; iNode++) {
     auto iPoint = geometry->bound[val_marker][0]->GetNode(iNode);
-    nodeCoord[iNode] = geometry->node[iPoint]->GetCoord();
+    nodeCoord[iNode] = geometry->nodes->GetCoord(iPoint);
   }
 
   su2double normal[MAXNDIM] = {0.0};
@@ -1986,7 +1986,7 @@ void CFEASolver::Postprocessing(CGeometry *geometry, CSolver **solver_container,
         if (Res > resMax[iVar]) {
           resMax[iVar] = Res;
           idxMax[iVar] = iPoint;
-          coordMax[iVar] = geometry->node[iPoint]->GetCoord();
+          coordMax[iVar] = geometry->nodes->GetCoord(iPoint);
         }
       }
     }
@@ -2184,7 +2184,7 @@ void CFEASolver::BC_Damper(CGeometry *geometry, CNumerics *numerics, const CConf
       indexNode[iNode] = iPoint;
 
       for (iDim = 0; iDim < nVar; iDim++)
-        nodeCoord[iNode][iDim] = geometry->node[iPoint]->GetCoord(iDim) + nodes->GetSolution(iPoint,iDim);
+        nodeCoord[iNode][iDim] = geometry->nodes->GetCoord(iPoint,iDim) + nodes->GetSolution(iPoint,iDim);
     }
 
     /*--- Compute the area of the surface element. ---*/
@@ -3109,7 +3109,7 @@ void CFEASolver::Compute_OFRefNode(CGeometry *geometry, const CConfig *config){
   long iPoint = geometry->GetGlobal_to_Local_Point(config->GetRefNode_ID());
 
   if (iPoint >= 0) {
-    if (geometry->node[iPoint]->GetDomain()) {
+    if (geometry->nodes->GetDomain(iPoint)) {
       for (unsigned short iVar = 0; iVar < nVar; ++iVar)
         dist[iVar] = nodes->GetSolution(iPoint,iVar) - config->GetRefNode_Displacement(iVar);
     }

@@ -80,7 +80,7 @@ CMeshSolver::CMeshSolver(CGeometry *geometry, CConfig *config) : CFEASolver(true
   for (iPoint = 0; iPoint < nPoint; iPoint++) {
 
     for (iDim = 0; iDim < nDim; ++iDim)
-      nodes->SetMesh_Coord(iPoint, iDim, geometry->node[iPoint]->GetCoord(iDim));
+      nodes->SetMesh_Coord(iPoint, iDim, geometry->nodes->GetCoord(iPoint,iDim));
 
     for (unsigned short iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
       long iVertex = geometry->node[iPoint]->GetVertex(iMarker);
@@ -530,7 +530,7 @@ void CMeshSolver::UpdateGridCoord(CGeometry *geometry, CConfig *config){
       /*--- Compute the current coordinate as Mesh_Coord + Displacement ---*/
       su2double val_coord = nodes->GetMesh_Coord(iPoint,iDim) + val_disp;
       /*--- Update the geometry container ---*/
-      geometry->node[iPoint]->SetCoord(iDim, val_coord);
+      geometry->nodes->SetCoord(iPoint, iDim, val_coord);
     }
   }
 
@@ -587,7 +587,7 @@ void CMeshSolver::ComputeGridVelocity(CGeometry *geometry, CConfig *config){
 
       /*--- Store grid velocity for this point ---*/
 
-      geometry->node[iPoint]->SetGridVel(iDim, GridVel);
+      geometry->nodes->SetGridVel(iPoint, iDim, GridVel);
 
     }
   }
@@ -995,7 +995,7 @@ void CMeshSolver::Surface_Pitching(CGeometry *geometry, CConfig *config, unsigne
         /*--- Index and coordinates of the current point ---*/
 
         iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
-        Coord  = geometry->node[iPoint]->GetCoord();
+        Coord  = geometry->nodes->GetCoord(iPoint);
 
         /*--- Calculate non-dim. position from rotation center ---*/
 
@@ -1101,7 +1101,7 @@ void CMeshSolver::Surface_Rotating(CGeometry *geometry, CConfig *config, unsigne
         /*--- Index and coordinates of the current point ---*/
 
         iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
-        Coord  = geometry->node[iPoint]->GetCoord();
+        Coord  = geometry->nodes->GetCoord(iPoint);
 
         /*--- Calculate non-dim. position from rotation center ---*/
 

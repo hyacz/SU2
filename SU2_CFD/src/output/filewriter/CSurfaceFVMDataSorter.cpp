@@ -69,7 +69,7 @@ void CSurfaceFVMDataSorter::SortOutputData() {
   SU2_MPI::Status status;
   int ind;
 #endif
-  
+
   const unsigned long nElemLine = GetnElem(LINE);
   const unsigned long nElemTria = GetnElem(TRIANGLE);
   const unsigned long nElemQuad = GetnElem(QUADRILATERAL);
@@ -826,7 +826,7 @@ void CSurfaceFVMDataSorter::SortOutputData() {
 
   SU2_MPI::Alltoall(&(nElem_Send[1]), 1, MPI_INT,
                     &(nElem_Recv[1]), 1, MPI_INT, MPI_COMM_WORLD);
-  
+
   /*--- Prepare to send connectivities. First check how many
    messages we will be sending and receiving. Here we also put
    the counters into cumulative storage format to make the
@@ -1093,7 +1093,7 @@ void CSurfaceFVMDataSorter::SortConnectivity(CConfig *config, CGeometry *geometr
   }
 
   /*--- Call the sort connectivity routine ---*/
-  
+
   SortConnectivity(config, geometry, markerList);
 
 }
@@ -1107,7 +1107,7 @@ void CSurfaceFVMDataSorter::SortConnectivity(CConfig *config, CGeometry *geometr
   /*--- Sort volumetric grid connectivity. ---*/
 
   nElemPerType.fill(0);
-  
+
   SortSurfaceConnectivity(config, geometry, LINE         , markerList);
   SortSurfaceConnectivity(config, geometry, TRIANGLE     , markerList);
   SortSurfaceConnectivity(config, geometry, QUADRILATERAL, markerList);
@@ -1191,7 +1191,7 @@ void CSurfaceFVMDataSorter::SortSurfaceConnectivity(CConfig *config, CGeometry *
             /*--- Get the index of the current point. ---*/
 
             iPoint = geometry->bound[iMarker][ii]->GetNode(jj);
-            Global_Index = geometry->node[iPoint]->GetGlobalIndex();
+            Global_Index = geometry->nodes->GetGlobalIndex(iPoint);
 
             /*--- Search for the lowest global index in this element. We
              send the element to the processor owning the range that includes
@@ -1199,7 +1199,7 @@ void CSurfaceFVMDataSorter::SortSurfaceConnectivity(CConfig *config, CGeometry *
 
             for (int kk = 0; kk < NODES_PER_ELEMENT; kk++) {
               jPoint = geometry->bound[iMarker][ii]->GetNode(kk);
-              unsigned long newID = geometry->node[jPoint]->GetGlobalIndex();
+              unsigned long newID = geometry->nodes->GetGlobalIndex(jPoint);
               if (newID < Global_Index) Global_Index = newID;
             }
 
@@ -1286,7 +1286,7 @@ void CSurfaceFVMDataSorter::SortSurfaceConnectivity(CConfig *config, CGeometry *
             /*--- Get the index of the current point. ---*/
 
             iPoint = geometry->bound[iMarker][ii]->GetNode(jj);
-            Global_Index = geometry->node[iPoint]->GetGlobalIndex();
+            Global_Index = geometry->nodes->GetGlobalIndex(iPoint);
 
             /*--- Search for the lowest global index in this element. We
              send the element to the processor owning the range that includes
@@ -1294,7 +1294,7 @@ void CSurfaceFVMDataSorter::SortSurfaceConnectivity(CConfig *config, CGeometry *
 
             for (int kk = 0; kk < NODES_PER_ELEMENT; kk++) {
               jPoint = geometry->bound[iMarker][ii]->GetNode(kk);
-              unsigned long newID = geometry->node[jPoint]->GetGlobalIndex();
+              unsigned long newID = geometry->nodes->GetGlobalIndex(jPoint);
               if (newID < Global_Index) Global_Index = newID;
             }
 
@@ -1314,7 +1314,7 @@ void CSurfaceFVMDataSorter::SortSurfaceConnectivity(CConfig *config, CGeometry *
 
               for (int kk = 0; kk < NODES_PER_ELEMENT; kk++) {
                 iPoint = geometry->bound[iMarker][ii]->GetNode(kk);
-                connSend[nn] = geometry->node[iPoint]->GetGlobalIndex(); nn++;
+                connSend[nn] = geometry->nodes->GetGlobalIndex(iPoint); nn++;
 
                 /*--- Check if this is a halo node. If so, flag this element
                  as a halo cell. We will use this later to sort and remove

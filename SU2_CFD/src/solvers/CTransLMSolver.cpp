@@ -207,7 +207,7 @@ void CTransLMSolver::ImplicitEuler_Iteration(CGeometry *geometry, CSolver **solv
   /*--- Build implicit system ---*/
 
   for (iPoint = 0; iPoint < geometry->GetnPointDomain(); iPoint++) {
-    Vol = geometry->node[iPoint]->GetVolume();
+    Vol = geometry->nodes->GetVolume(iPoint);
 
     /*--- Modify matrix diagonal to assure diagonal dominance ---*/
 
@@ -223,7 +223,7 @@ void CTransLMSolver::ImplicitEuler_Iteration(CGeometry *geometry, CSolver **solv
       LinSysRes[total_index] = -LinSysRes[total_index];
       LinSysSol[total_index] = 0.0;
       AddRes_RMS(iVar, LinSysRes[total_index]*LinSysRes[total_index]*Vol);
-      AddRes_Max(iVar, fabs(LinSysRes[total_index]), geometry->node[iPoint]->GetGlobalIndex(), geometry->node[iPoint]->GetCoord());
+      AddRes_Max(iVar, fabs(LinSysRes[total_index]), geometry->nodes->GetGlobalIndex(iPoint), geometry->nodes->GetCoord(iPoint));
     }
   }
 
@@ -311,7 +311,7 @@ void CTransLMSolver::Viscous_Residual(CGeometry *geometry, CSolver **solver_cont
     jPoint = geometry->edges->GetNode(iEdge,1);
 
     /*--- Points coordinates, and normal vector ---*/
-    numerics->SetCoord(geometry->node[iPoint]->GetCoord(),
+    numerics->SetCoord(geometry->nodes->GetCoord(iPoint),
                      geometry->node[jPoint]->GetCoord());
 
     numerics->SetNormal(geometry->edges->GetNormal(iEdge));
@@ -381,7 +381,7 @@ void CTransLMSolver::Source_Residual(CGeometry *geometry, CSolver **solver_conta
 
     /*--- Set volume ---*/
 
-    numerics->SetVolume(geometry->node[iPoint]->GetVolume());
+    numerics->SetVolume(geometry->nodes->GetVolume(iPoint));
 
     /*--- Set distance to the surface ---*/
 
@@ -424,7 +424,7 @@ void CTransLMSolver::BC_HeatFlux_Wall(CGeometry *geometry, CSolver **solver_cont
     iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
 
     /*--- Check if the node belongs to the domain (i.e., not a halo node) ---*/
-    if (geometry->node[iPoint]->GetDomain()) {
+    if (geometry->nodes->GetDomain(iPoint)) {
 
       /*--- Normal vector for this vertex (negate for outward convention) ---*/
       geometry->vertex[val_marker][iVertex]->GetNormal(Normal);
@@ -463,7 +463,7 @@ void CTransLMSolver::BC_HeatFlux_Wall(CGeometry *geometry, CSolver **solver_cont
 //    iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
 //
 //    /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
-//    if (geometry->node[iPoint]->GetDomain()) {
+//    if (geometry->nodes->GetDomain(iPoint)) {
 //
 //      /*--- Impose boundary values (Dirichlet) ---*/
 //      Solution[0] = 0.0;
@@ -496,7 +496,7 @@ void CTransLMSolver::BC_Far_Field(CGeometry *geometry, CSolver **solver_containe
     iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
 
     /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
-    if (geometry->node[iPoint]->GetDomain()) {
+    if (geometry->nodes->GetDomain(iPoint)) {
 
       /*--- Impose boundary values (Dirichlet) ---*/
       Solution[0] = Intermittency_Inf;

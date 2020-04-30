@@ -241,8 +241,8 @@ void CIntegration::SetDualTime_Solver(CGeometry *geometry, CSolver *solver, CCon
     /*--- Store old coordinates in case there is grid movement ---*/
 
     if (config->GetGrid_Movement()) {
-      geometry->node[iPoint]->SetCoord_n1();
-      geometry->node[iPoint]->SetCoord_n();
+      geometry->nodes->SetCoord_n1(iPoint, );
+      geometry->nodes->SetCoord_n(iPoint, );
     }
   }
 

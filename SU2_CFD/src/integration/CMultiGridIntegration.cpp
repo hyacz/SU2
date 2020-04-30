@@ -397,7 +397,7 @@ void CMultiGridIntegration::SmoothProlongated_Correction(unsigned short RunTime_
 
       solver->GetNodes()->SetResidualSumZero(iPoint);
 
-      for (iNeigh = 0; iNeigh < geometry->node[iPoint]->GetnPoint(); ++iNeigh) {
+      for (iNeigh = 0; iNeigh < geometry->nodes->GetnPoint(iPoint); ++iNeigh) {
         jPoint = geometry->node[iPoint]->GetPoint(iNeigh);
         Residual_j = solver->LinSysRes.GetBlock(jPoint);
         solver->GetNodes()->AddResidual_Sum(iPoint, Residual_j);
@@ -410,7 +410,7 @@ void CMultiGridIntegration::SmoothProlongated_Correction(unsigned short RunTime_
     SU2_OMP_FOR_STAT(roundUpDiv(geometry->GetnPoint(), omp_get_num_threads()))
     for (iPoint = 0; iPoint < geometry->GetnPoint(); ++iPoint) {
 
-      su2double factor = 1.0/(1.0+val_smooth_coeff*su2double(geometry->node[iPoint]->GetnPoint()));
+      su2double factor = 1.0/(1.0+val_smooth_coeff*su2double(geometry->nodes->GetnPoint(iPoint)));
 
       Residual_Sum = solver->GetNodes()->GetResidual_Sum(iPoint);
       Residual_Old = solver->GetNodes()->GetResidual_Old(iPoint);

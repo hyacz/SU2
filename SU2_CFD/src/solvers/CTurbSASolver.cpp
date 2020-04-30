@@ -403,7 +403,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
 
     /*--- Set volume ---*/
 
-    numerics->SetVolume(geometry->node[iPoint]->GetVolume());
+    numerics->SetVolume(geometry->nodes->GetVolume(iPoint));
 
     /*--- Get Hybrid RANS/LES Type and set the appropriate wall distance ---*/
 
@@ -444,7 +444,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
     SU2_OMP_FOR_STAT(omp_chunk_size)
     for (unsigned long iPoint = 0; iPoint < nPointDomain; iPoint++) {
 
-      su2double Volume = geometry->node[iPoint]->GetVolume();
+      su2double Volume = geometry->nodes->GetVolume(iPoint);
 
       /*--- Access stored harmonic balance source term ---*/
 
@@ -477,7 +477,7 @@ void CTurbSASolver::BC_HeatFlux_Wall(CGeometry *geometry, CSolver **solver_conta
 
       /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
 
-      if (geometry->node[iPoint]->GetDomain()) {
+      if (geometry->nodes->GetDomain(iPoint)) {
 
         /*--- Get the velocity vector ---*/
 
@@ -513,7 +513,7 @@ void CTurbSASolver::BC_Isothermal_Wall(CGeometry *geometry, CSolver **solver_con
 
     /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
 
-    if (geometry->node[iPoint]->GetDomain()) {
+    if (geometry->nodes->GetDomain(iPoint)) {
 
       /*--- Get the velocity vector ---*/
       for (iVar = 0; iVar < nVar; iVar++)
@@ -545,7 +545,7 @@ void CTurbSASolver::BC_Far_Field(CGeometry *geometry, CSolver **solver_container
 
     /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
 
-    if (geometry->node[iPoint]->GetDomain()) {
+    if (geometry->nodes->GetDomain(iPoint)) {
 
       /*--- Allocate the value at the infinity ---*/
 
@@ -558,7 +558,7 @@ void CTurbSASolver::BC_Far_Field(CGeometry *geometry, CSolver **solver_container
       /*--- Grid Movement ---*/
 
       if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(), geometry->node[iPoint]->GetGridVel());
+        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(iPoint));
 
       conv_numerics->SetPrimitive(V_domain, V_infty);
 
@@ -611,7 +611,7 @@ void CTurbSASolver::BC_Inlet(CGeometry *geometry, CSolver **solver_container, CN
 
     /*--- Check if the node belongs to the domain (i.e., not a halo node) ---*/
 
-    if (geometry->node[iPoint]->GetDomain()) {
+    if (geometry->nodes->GetDomain(iPoint)) {
 
       /*--- Normal vector for this vertex (negate for outward convention) ---*/
 
@@ -645,8 +645,8 @@ void CTurbSASolver::BC_Inlet(CGeometry *geometry, CSolver **solver_container, CN
       conv_numerics->SetNormal(Normal);
 
       if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(),
-                                  geometry->node[iPoint]->GetGridVel());
+        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
+                                  geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -659,7 +659,7 @@ void CTurbSASolver::BC_Inlet(CGeometry *geometry, CSolver **solver_container, CN
 
 //      /*--- Viscous contribution, commented out because serious convergence problems ---*/
 //
-//      visc_numerics->SetCoord(geometry->node[iPoint]->GetCoord(), geometry->node[Point_Normal]->GetCoord());
+//      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), geometry->node[Point_Normal]->GetCoord());
 //      visc_numerics->SetNormal(Normal);
 //
 //      /*--- Conservative variables w/o reconstruction ---*/
@@ -704,7 +704,7 @@ void CTurbSASolver::BC_Outlet(CGeometry *geometry, CSolver **solver_container, C
 
     /*--- Check if the node belongs to the domain (i.e., not a halo node) ---*/
 
-    if (geometry->node[iPoint]->GetDomain()) {
+    if (geometry->nodes->GetDomain(iPoint)) {
 
       /*--- Allocate the value at the outlet ---*/
 
@@ -738,8 +738,8 @@ void CTurbSASolver::BC_Outlet(CGeometry *geometry, CSolver **solver_container, C
       conv_numerics->SetNormal(Normal);
 
       if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(),
-                                  geometry->node[iPoint]->GetGridVel());
+        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
+                                  geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -752,7 +752,7 @@ void CTurbSASolver::BC_Outlet(CGeometry *geometry, CSolver **solver_container, C
 
 //      /*--- Viscous contribution, commented out because serious convergence problems ---*/
 //
-//      visc_numerics->SetCoord(geometry->node[iPoint]->GetCoord(), geometry->node[Point_Normal]->GetCoord());
+//      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), geometry->node[Point_Normal]->GetCoord());
 //      visc_numerics->SetNormal(Normal);
 //
 //      /*--- Conservative variables w/o reconstruction ---*/
@@ -798,7 +798,7 @@ void CTurbSASolver::BC_Engine_Inflow(CGeometry *geometry, CSolver **solver_conta
 
     /*--- Check if the node belongs to the domain (i.e., not a halo node) ---*/
 
-    if (geometry->node[iPoint]->GetDomain()) {
+    if (geometry->nodes->GetDomain(iPoint)) {
 
       /*--- Allocate the value at the infinity ---*/
 
@@ -828,8 +828,8 @@ void CTurbSASolver::BC_Engine_Inflow(CGeometry *geometry, CSolver **solver_conta
       /*--- Set grid movement ---*/
 
       if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(),
-                                  geometry->node[iPoint]->GetGridVel());
+        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
+                                  geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -842,7 +842,7 @@ void CTurbSASolver::BC_Engine_Inflow(CGeometry *geometry, CSolver **solver_conta
 
 //      /*--- Viscous contribution, commented out because serious convergence problems ---*/
 //
-//      visc_numerics->SetCoord(geometry->node[iPoint]->GetCoord(), geometry->node[iPoint]->GetCoord());
+//      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), geometry->nodes->GetCoord(iPoint));
 //      visc_numerics->SetNormal(Normal);
 //
 //      /*--- Conservative variables w/o reconstruction ---*/
@@ -892,7 +892,7 @@ void CTurbSASolver::BC_Engine_Exhaust(CGeometry *geometry, CSolver **solver_cont
 
     /*--- Check if the node belongs to the domain (i.e., not a halo node) ---*/
 
-    if (geometry->node[iPoint]->GetDomain()) {
+    if (geometry->nodes->GetDomain(iPoint)) {
 
       /*--- Normal vector for this vertex (negate for outward convention) ---*/
 
@@ -925,8 +925,8 @@ void CTurbSASolver::BC_Engine_Exhaust(CGeometry *geometry, CSolver **solver_cont
       /*--- Set grid movement ---*/
 
       if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(),
-                                  geometry->node[iPoint]->GetGridVel());
+        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
+                                  geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -939,7 +939,7 @@ void CTurbSASolver::BC_Engine_Exhaust(CGeometry *geometry, CSolver **solver_cont
 
 //      /*--- Viscous contribution, commented out because serious convergence problems ---*/
 //
-//      visc_numerics->SetCoord(geometry->node[iPoint]->GetCoord(), geometry->node[iPoint]->GetCoord());
+//      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), geometry->nodes->GetCoord(iPoint));
 //      visc_numerics->SetNormal(Normal);
 //
 //      /*--- Conservative variables w/o reconstruction ---*/
@@ -999,11 +999,11 @@ void CTurbSASolver::BC_ActDisk(CGeometry *geometry, CSolver **solver_container,
 
     iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
     GlobalIndex_donor = solver_container[FLOW_SOL]->GetDonorGlobalIndex(val_marker, iVertex);
-    GlobalIndex = geometry->node[iPoint]->GetGlobalIndex();
+    GlobalIndex = geometry->nodes->GetGlobalIndex(iPoint);
 
     /*--- Check if the node belongs to the domain (i.e., not a halo node) ---*/
 
-    if ((geometry->node[iPoint]->GetDomain()) && (GlobalIndex != GlobalIndex_donor)) {
+    if ((geometry->nodes->GetDomain(iPoint)) && (GlobalIndex != GlobalIndex_donor)) {
 
       /*--- Normal vector for this vertex (negate for outward convention) ---*/
 
@@ -1085,7 +1085,7 @@ void CTurbSASolver::BC_ActDisk(CGeometry *geometry, CSolver **solver_container,
         /*--- Grid Movement ---*/
 
         if (dynamic_grid)
-          conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(), geometry->node[iPoint]->GetGridVel());
+          conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint), geometry->nodes->GetGridVel(iPoint));
 
         /*--- Compute the residual using an upwind scheme ---*/
 
@@ -1099,7 +1099,7 @@ void CTurbSASolver::BC_ActDisk(CGeometry *geometry, CSolver **solver_container,
 //        /*--- Viscous contribution, commented out because serious convergence problems ---*/
 //
 //        visc_numerics->SetNormal(Normal);
-//        visc_numerics->SetCoord(geometry->node[iPoint]->GetCoord(), geometry->node[iPoint_Normal]->GetCoord());
+//        visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), geometry->node[iPoint_Normal]->GetCoord());
 //
 //        /*--- Conservative variables w/o reconstruction ---*/
 //
@@ -1195,8 +1195,8 @@ void CTurbSASolver::BC_Inlet_MixingPlane(CGeometry *geometry, CSolver **solver_c
       conv_numerics->SetNormal(Normal);
 
       if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(),
-            geometry->node[iPoint]->GetGridVel());
+        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
+            geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -1209,7 +1209,7 @@ void CTurbSASolver::BC_Inlet_MixingPlane(CGeometry *geometry, CSolver **solver_c
 
       /*--- Viscous contribution ---*/
 
-      visc_numerics->SetCoord(geometry->node[iPoint]->GetCoord(), geometry->node[Point_Normal]->GetCoord());
+      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), geometry->node[Point_Normal]->GetCoord());
       visc_numerics->SetNormal(Normal);
 
       /*--- Conservative variables w/o reconstruction ---*/
@@ -1311,8 +1311,8 @@ void CTurbSASolver::BC_Inlet_Turbo(CGeometry *geometry, CSolver **solver_contain
       conv_numerics->SetNormal(Normal);
 
       if (dynamic_grid)
-        conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(),
-            geometry->node[iPoint]->GetGridVel());
+        conv_numerics->SetGridVel(geometry->nodes->GetGridVel(iPoint),
+            geometry->nodes->GetGridVel(iPoint));
 
       /*--- Compute the residual using an upwind scheme ---*/
 
@@ -1325,7 +1325,7 @@ void CTurbSASolver::BC_Inlet_Turbo(CGeometry *geometry, CSolver **solver_contain
 
       /*--- Viscous contribution ---*/
 
-      visc_numerics->SetCoord(geometry->node[iPoint]->GetCoord(), geometry->node[Point_Normal]->GetCoord());
+      visc_numerics->SetCoord(geometry->nodes->GetCoord(iPoint), geometry->node[Point_Normal]->GetCoord());
       visc_numerics->SetNormal(Normal);
 
       /*--- Conservative variables w/o reconstruction ---*/
@@ -1367,7 +1367,7 @@ void CTurbSASolver::BC_Interface_Boundary(CGeometry *geometry, CSolver **solver_
   //  for (iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
   //    iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
   //
-  //    if (geometry->node[iPoint]->GetDomain()) {
+  //    if (geometry->nodes->GetDomain(iPoint)) {
   //
   //      /*--- Find the associate pair to the original node ---*/
   //      jPoint = geometry->vertex[val_marker][iVertex]->GetDonorPoint();
@@ -1421,7 +1421,7 @@ void CTurbSASolver::BC_Interface_Boundary(CGeometry *geometry, CSolver **solver_
   //   node individually, this must be changed ---*/
   //  for (iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
   //    iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
-  //    if (geometry->node[iPoint]->GetDomain()) {
+  //    if (geometry->nodes->GetDomain(iPoint)) {
   //
   //      /*--- Find the associate pair to the original node ---*/
   //      jPoint = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[0];
@@ -1452,7 +1452,7 @@ void CTurbSASolver::BC_Interface_Boundary(CGeometry *geometry, CSolver **solver_
   //
   //    iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
   //
-  //    if (geometry->node[iPoint]->GetDomain()) {
+  //    if (geometry->nodes->GetDomain(iPoint)) {
   //
   //      /*--- Find the associate pair to the original node ---*/
   //      jPoint = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[0];
@@ -1530,7 +1530,7 @@ void CTurbSASolver::BC_NearField_Boundary(CGeometry *geometry, CSolver **solver_
   //  for (iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
   //    iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
   //
-  //    if (geometry->node[iPoint]->GetDomain()) {
+  //    if (geometry->nodes->GetDomain(iPoint)) {
   //
   //      /*--- Find the associate pair to the original node ---*/
   //      jPoint = geometry->vertex[val_marker][iVertex]->GetDonorPoint();
@@ -1584,7 +1584,7 @@ void CTurbSASolver::BC_NearField_Boundary(CGeometry *geometry, CSolver **solver_
   //   node individually, this must be changed ---*/
   //  for (iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
   //    iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
-  //    if (geometry->node[iPoint]->GetDomain()) {
+  //    if (geometry->nodes->GetDomain(iPoint)) {
   //
   //      /*--- Find the associate pair to the original node ---*/
   //      jPoint = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[0];
@@ -1615,7 +1615,7 @@ void CTurbSASolver::BC_NearField_Boundary(CGeometry *geometry, CSolver **solver_
   //
   //    iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
   //
-  //    if (geometry->node[iPoint]->GetDomain()) {
+  //    if (geometry->nodes->GetDomain(iPoint)) {
   //
   //      /*--- Find the associate pair to the original node ---*/
   //      jPoint = geometry->vertex[val_marker][iVertex]->GetPeriodicPointDomain()[0];
@@ -1740,17 +1740,17 @@ void CTurbSASolver::SetNuTilde_WF(CGeometry *geometry, CSolver **solver_containe
 
     iPoint_Neighbor = geometry->vertex[val_marker][iVertex]->GetNormal_Neighbor();
 
-    for(iNode = 0; iNode < geometry->node[iPoint]->GetnPoint(); iNode++) {
-      iPoint_Neighbor = geometry->node[iPoint]->GetPoint(iNode);
+    for(iNode = 0; iNode < geometry->nodes->GetnPoint(iPoint); iNode++) {
+      iPoint_Neighbor = geometry->nodes->GetPoint(iPoint,iNode);
 
       /*--- Check if the node belongs to the domain (i.e, not a halo node)
        and the neighbor is not part of the physical boundary ---*/
 
-      if (geometry->node[iPoint]->GetDomain() && (!geometry->node[iPoint_Neighbor]->GetBoundary())) {
+      if (geometry->nodes->GetDomain(iPoint) && (!geometry->node[iPoint_Neighbor]->GetBoundary())) {
 
         /*--- Get coordinates of the current vertex and nearest normal point ---*/
 
-        Coord = geometry->node[iPoint]->GetCoord();
+        Coord = geometry->nodes->GetCoord(iPoint);
         Coord_Normal = geometry->node[iPoint_Neighbor]->GetCoord();
 
         /*--- Compute dual-grid area and boundary normal ---*/
@@ -1978,8 +1978,8 @@ void CTurbSASolver::SetDES_LengthScale(CSolver **solver, CGeometry *geometry, CC
   SU2_OMP_FOR_DYN(omp_chunk_size)
   for (iPoint = 0; iPoint < nPointDomain; iPoint++){
 
-    coord_i                 = geometry->node[iPoint]->GetCoord();
-    nNeigh                  = geometry->node[iPoint]->GetnPoint();
+    coord_i                 = geometry->nodes->GetCoord(iPoint);
+    nNeigh                  = geometry->nodes->GetnPoint(iPoint);
     wallDistance            = geometry->node[iPoint]->GetWall_Distance();
     primVarGrad             = solver[FLOW_SOL]->GetNodes()->GetGradient_Primitive(iPoint);
     vorticity               = solver[FLOW_SOL]->GetNodes()->GetVorticity(iPoint);
@@ -2019,7 +2019,7 @@ void CTurbSASolver::SetDES_LengthScale(CSolver **solver, CGeometry *geometry, CC
         1997
         ---*/
 
-        maxDelta = geometry->node[iPoint]->GetMaxLength();
+        maxDelta = geometry->nodes->GetMaxLength(iPoint);
         distDES = constDES * maxDelta;
         lengthScale = min(distDES,wallDistance);
 
@@ -2031,7 +2031,7 @@ void CTurbSASolver::SetDES_LengthScale(CSolver **solver, CGeometry *geometry, CC
          Theoretical and Computational Fluid Dynamics - 2006
          ---*/
 
-        maxDelta = geometry->node[iPoint]->GetMaxLength();
+        maxDelta = geometry->nodes->GetMaxLength(iPoint);
 
         r_d = (kinematicViscosityTurb+kinematicViscosity)/(uijuij*k2*pow(wallDistance, 2.0));
         f_d = 1.0-tanh(pow(8.0*r_d,3.0));
@@ -2053,7 +2053,7 @@ void CTurbSASolver::SetDES_LengthScale(CSolver **solver, CGeometry *geometry, CC
               deltaAux = abs(coord_j[iDim] - coord_i[iDim]);
               delta[iDim] = max(delta[iDim], deltaAux);
             }
-            deltaDDES = geometry->node[iPoint]->GetMaxLength();
+            deltaDDES = geometry->nodes->GetMaxLength(iPoint);
         }
 
         omega = sqrt(vorticity[0]*vorticity[0] +
@@ -2105,7 +2105,7 @@ void CTurbSASolver::SetDES_LengthScale(CSolver **solver, CGeometry *geometry, CC
           for (iDim = 0; iDim < nDim; iDim++){
             delta[iDim] = fabs(coord_j[iDim] - coord_i[iDim]);
           }
-          deltaDDES = geometry->node[iPoint]->GetMaxLength();
+          deltaDDES = geometry->nodes->GetMaxLength(iPoint);
           ln[0] = delta[1]*ratioOmega[2] - delta[2]*ratioOmega[1];
           ln[1] = delta[2]*ratioOmega[0] - delta[0]*ratioOmega[2];
           ln[2] = delta[0]*ratioOmega[1] - delta[1]*ratioOmega[0];
